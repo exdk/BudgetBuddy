@@ -28,7 +28,8 @@ struct CategoryTransactionsView: View {
                         Text(formatCurrency(total))
                             .font(.title2).bold()
                             .foregroundColor(.red)
-                        Text("\(percent, specifier: \"%.1f\")% от расходов")
+                        // ✅ Исправление: правильный specifier без кавычек
+                        Text(String(format: "%.1f%% от расходов", percent))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

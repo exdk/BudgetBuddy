@@ -66,7 +66,7 @@ struct DashboardView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
             }
-            .navigationTitle("📊 Дашборд")
+            .navigationTitle("📊 График")
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showCategoryTransactions) {
                 if let category = selectedCategory {

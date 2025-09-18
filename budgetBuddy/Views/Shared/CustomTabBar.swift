@@ -1,3 +1,11 @@
+//
+//  CustomTabBar.swift
+//  budgetBuddy
+//
+//  Created by Виктор Юнусов on 15.09.2025.
+//
+
+
 import SwiftUI
 
 struct CustomTabBar: View {
@@ -12,8 +20,7 @@ struct CustomTabBar: View {
                     VStack(spacing: 4) {
                         Image(systemName: tab.rawValue)
                             .font(.system(size: 20, weight: .semibold))
-                        // Можно добавить подпись, если нужно:
-                        // Text(tabTitle(tab)).font(.caption2)
+                        Text(tabTitle(tab)).font(.caption2)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
@@ -31,9 +38,10 @@ struct CustomTabBar: View {
     // опционально: функция для отображения текста
     private func tabTitle(_ tab: Tab) -> String {
         switch tab {
-        case .transactions: return "Транзакции"
+        case .transactions: return "Операции"
         case .planned: return "Планы"
-        case .dashboard: return "Дашборд"
+        case .dashboard: return "График"
+        case .accounts: return "Счета"
         case .settings: return "Настройки"
         }
     }

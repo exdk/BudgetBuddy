@@ -5,83 +5,99 @@ struct PlannedListView: View {
     @Environment(\.modelContext) private var context
     @Query private var planned: [PlannedTransaction]
     
-    enum Mode: String, CaseIterable { case list = "Список", calendar = "Календарь" }
+    enum Mode: String, CaseIterable {
+        case list = "Список"
+        case calendar = "Календарь"
+        case matrix = "Матрица"
+    }
     @State private var mode: Mode = .calendar
     @State private var showAdd = false
     @State private var monthAnchor: Date = .now
     @State private var selectedDay: Date = .now
     @State private var showDaySheet = false
-    @State private var showMatrixPlanner = false
-    
+
+    /// Группировка по дате
     private var plannedByDay: [Date: [PlannedTransaction]] {
         let cal = Calendar.current
         return Dictionary(grouping: planned) { cal.startOfDay(for: $0.date) }
     }
     
+    /// Отсортированный список
+    private var sortedPlanned: [PlannedTransaction] {
+        planned.sorted { $0.date < $1.date }
+    }
+    
     var body: some View {
         NavigationStack {
-            Group {
-                switch mode {
-                case .list:
-                    List {
-                        ForEach(planned.sorted { $0.date < $1.date }) { plan in
-                            PlannedRow(plan: plan)
+            content
+                .navigationTitle("Планы")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Picker("Режим", selection: $mode) {
+                            ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
                         }
-                        .onDelete { idx in
-                            idx.map { planned.sorted { $0.date < $1.date }[$0] }.forEach(context.delete)
-                            try? context.save()
-                        }
-                    }.listStyle(.plain)
-                    
-                case .calendar:
-                    ScrollView {
-                        CalendarMonthView(
-                            monthAnchor: $monthAnchor,
-                            selectedDay: $selectedDay,
-                            plannedByDay: plannedByDay,
-                            onSelectDay: { day in
-                                selectedDay = day
-                                showDaySheet = true
-                            }
-                        )
-                        .padding(.horizontal, 16)
+                        .pickerStyle(.segmented)
+                        .frame(width: 300)
                     }
-                }
-            }
-            .navigationTitle("Запланированные")
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Picker("Режим", selection: $mode) {
-                        ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 200)
-                }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button("Матричный") { showMatrixPlanner = true }
-                    Button("Добавить") { showAdd = true }
-                }
-            }
-            .sheet(isPresented: $showAdd) {
-                PlannedForm(defaultDate: selectedDay)
-            }
-            .sheet(isPresented: $showDaySheet) {
-                DayPlannedSheet(
-                    date: selectedDay,
-                    items: plannedByDay[Calendar.current.startOfDay(for: selectedDay)] ?? [],
-                    onAdd: {
-                        showDaySheet = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Button {
                             showAdd = true
+                        } label: {
+                            Image(systemName: "plus")
                         }
+                    }
+                }
+                .sheet(isPresented: $showAdd) {
+                    PlannedForm(defaultDate: selectedDay)
+                }
+        }
+    }
+    
+    // MARK: - Подвью для выбора режима
+    private var modePicker: some View {
+        Picker("Режим", selection: $mode) {
+            ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .frame(width: 200)
+    }
+    
+    // MARK: - Контент
+    @ViewBuilder
+    private var content: some View {
+        switch mode {
+        case .list:
+            List {
+                ForEach(planned.sorted { $0.date < $1.date }) { plan in
+                    PlannedRow(plan: plan)
+                }
+                .onDelete { indexSet in
+                    for index in indexSet {
+                        let item = planned[index]
+                        context.delete(item)
+                    }
+                    try? context.save()
+                }
+            }
+            
+        case .calendar:
+            ScrollView {
+                CalendarMonthView(
+                    monthAnchor: $monthAnchor,
+                    selectedDay: $selectedDay,
+                    plannedByDay: plannedByDay,
+                    onSelectDay: { day in
+                        selectedDay = day
+                        showDaySheet = true
                     }
                 )
+                .padding(.horizontal, 16)
             }
-            .sheet(isPresented: $showMatrixPlanner) {
-                MatrixPlannerView()
-            }
-            .onAppear { processPlannedTransactions(context: context) }
+            
+        case .matrix:
+            MatrixPlannerView()
         }
+        
     }
 }
 

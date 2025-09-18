@@ -1,40 +1,36 @@
+// ЗАМЕНИТЕ СОДЕРЖИМОЕ CSVImportView.swift на:
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct CSVImportView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var context
-    
-    @State private var errorMessage: String?
-    @State private var importedPlan: MatrixPlan?
     
     var body: some View {
-        VStack(spacing: 16) {
-            if let errorMessage = errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
+        NavigationStack {
+            VStack(spacing: 20) {
+                Image(systemName: "table")
+                    .font(.system(size: 50))
+                    .foregroundColor(.blue)
+                
+                Text("Импорт CSV")
+                    .font(.title2)
+                
+                Text("В текущей версии импорт CSV временно недоступен. Матричный планировщик теперь использует ваши существующие запланированные операции.")
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
                     .padding()
+                
+                Button("Закрыть") {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
             }
-            
-            Button("Импортировать CSV") {
-                importCSV()
+            .padding()
+            .navigationTitle("Импорт CSV")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Отмена") { dismiss() }
+                }
             }
-            .buttonStyle(.borderedProminent)
         }
-        .padding()
-        .navigationTitle("Импорт CSV")
-    }
-    
-    func importCSV() {
-        // Здесь можно добавить логику выбора файла, но для упрощения – пример
-        let categories = [MatrixCategory(name: "Пример", type: .expense)]
-        let dates = [Date()]
-        let plan = MatrixPlan(title: "Импортированный план", categories: categories, dateColumns: dates)
-        for cat in categories {
-            plan.values[cat.name] = Array(repeating: 0, count: dates.count)
-        }
-        context.insert(plan)
-        try? context.save()
-        dismiss()
     }
 }

@@ -6,8 +6,8 @@ struct DayPlannedSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let date: Date
+    var onAdd: (() -> Void)? = nil
     @State private var planned: [PlannedTransaction] = []
-
     @State private var showAddForm = false
 
     var body: some View {
@@ -22,18 +22,22 @@ struct DayPlannedSheet: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(item.category?.name ?? "Без категории")
                                     .font(.headline)
-                                Text(item.note.isEmpty ? "" : item.note)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                if !item.note.isEmpty {
+                                    Text(item.note)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
                             }
                             Spacer()
                             Text(formatCurrency(item.amount))
                                 .foregroundColor(item.isExpense ? .red : .green)
                         }
+                        .padding(.vertical, 6)
                     }
                     .onDelete { idxSet in
                         for idx in idxSet {
-                            context.delete(planned[idx])
+                            let item = planned[idx]
+                            context.delete(item)
                         }
                         try? context.save()
                         loadPlanned()
@@ -47,7 +51,11 @@ struct DayPlannedSheet: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        showAddForm = true
+                        if let onAdd = onAdd {
+                            onAdd()
+                        } else {
+                            showAddForm = true
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
@@ -55,27 +63,27 @@ struct DayPlannedSheet: View {
             }
             .onAppear { loadPlanned() }
             .sheet(isPresented: $showAddForm) {
-                PlannedForm(date: date) {
+                PlannedForm(defaultDate: date, onSave: {
                     loadPlanned()
-                }
+                })
             }
         }
     }
 
     private func loadPlanned() {
-        let descriptor = FetchDescriptor<PlannedTransaction>(
-            predicate: #Predicate { $0.date.isSameDay(as: date) },
-            sortBy: [SortDescriptor(\.amount, order: .reverse)]
-        )
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { return }
+
+        var descriptor = FetchDescriptor<PlannedTransaction>()
+        descriptor.predicate = #Predicate { $0.date >= startOfDay && $0.date < endOfDay }
+        descriptor.sortBy = [SortDescriptor(\.amount, order: .reverse)]
+
         if let results = try? context.fetch(descriptor) {
             planned = results
+        } else {
+            planned = []
         }
     }
 }
 
-// MARK: - Вспомогательный метод для сравнения дат по дню
-fileprivate extension Date {
-    func isSameDay(as other: Date) -> Bool {
-        Calendar.current.isDate(self, inSameDayAs: other)
-    }
-}

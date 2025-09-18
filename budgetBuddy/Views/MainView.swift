@@ -4,6 +4,7 @@ enum Tab: String, CaseIterable {
     case transactions = "list.bullet"
     case planned = "calendar"
     case dashboard = "chart.bar.fill"
+    case accounts = "rublesign.bank.building"
     case settings = "gearshape.fill"
 }
 
@@ -20,6 +21,8 @@ struct MainView: View {
                     PlannedListView()
                 case .dashboard:
                     DashboardView()
+                case .accounts:
+                    AccountListView()
                 case .settings:
                     SettingsView()
                 }

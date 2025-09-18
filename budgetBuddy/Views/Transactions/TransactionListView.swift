@@ -74,13 +74,24 @@ struct TransactionListView: View {
                         try? context.save()
                     }
                 }
+                HStack {
+                    Spacer()
+                    Button {
+                        showAddTransaction = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .frame(width: 50, height: 50)
+                            .foregroundColor(Color.black)
+                            .background(Color.red)
+                            .clipShape(Circle())
+                    }
+                    .padding(.bottom, 100)
+                    .padding(.trailing, 30)
+                }
             }
-            .navigationTitle("Транзакции")
+            .navigationTitle("Операции")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {
-                    Button { showAddTransaction = true } label: {
-                        Image(systemName: "plus")
-                    }
                     if let url = exportCSV(transactions: filtered) {
                         ShareLink(item: url, preview: SharePreview("Экспорт CSV")) {
                             Image(systemName: "square.and.arrow.up")

@@ -1,3 +1,11 @@
+//
+//  MatrixGridView.swift
+//  budgetBuddy
+//
+//  Created by Виктор Юнусов on 15.09.2025.
+//
+
+
 import SwiftUI
 
 struct MatrixGridView: View {
